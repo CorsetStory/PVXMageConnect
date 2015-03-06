@@ -15,7 +15,8 @@ if (isset($_REQUEST['ItemCode'], $_REQUEST['Available']))
 else
 {
 		
-		
+
+
 		try {
 			//echo '<br>Itemcode not set';
 			$sql = 'select sku, qty, time_s from pvx_stockchange;';

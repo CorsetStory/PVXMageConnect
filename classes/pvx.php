@@ -14,10 +14,10 @@ if (defined('TESTMODE') && TESTMODE == True)
 else
 {
 // Live PVX system
-	define("CLIENT_ID", "corsetsuk2600");
-	define("USER_NAME", "ReadOnly");
-	define("PASSWORD", "r0enaldy14");
-	define("URL", "http://emea.peoplevox.net/corsetsuk2600/resources/integrationservicev4.asmx?wsdl");
+//	define("CLIENT_ID", "corsetsuk2600");
+//	define("USER_NAME", "ReadOnly");
+//	define("PASSWORD", "r0enaldy14");
+//	define("URL", "http://emea.peoplevox.net/corsetsuk2600/resources/integrationservicev4.asmx?wsdl");
 }
 
 class PVX_API
@@ -34,6 +34,7 @@ class PVX_API
 	private $templateName;
 	private $searchClause;
 	private $morePages;
+	private $url;
 	public $errorOccurred;
 
 			
@@ -42,13 +43,46 @@ class PVX_API
 		$this->debugmode = (defined('DEBUGMODE') && DEBUGMODE == True);
 		$this->loggedIn = false;
 		$this->errorOccurred = false;
-		$this->logintoAPI (CLIENT_ID, USER_NAME, PASSWORD, URL);
+		$this->url = URL;
+		$this->logintoAPI (CLIENT_ID, USER_NAME, PASSWORD, $this->url);
 		If($this->debugmode) 
 		{ 
 			if($this->loggedIn) { print "<BR>DEBUGMODE: LOGGED IN: ".$this->sessionID."; clientID = ".$this->clientID;} else { print "<BR>DEBUGMODE: LOG IN FAILED :-(";}
 		}
 	}
 
+	
+	public function subscribeEvent($eventType, $callBackURL)
+	{
+			$request = "<soap:Envelope xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" 
+										xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" 
+										xmlns:soap=\"http://schemas.xmlsoap.org/soap/envelope/\">
+							<soap:Header>
+								<UserSessionCredentials xmlns=\"http://www.peoplevox.net/\">
+									<ClientId>".$this->clientID."</ClientId>
+									<SessionId>".$this->sessionID."</SessionId>
+								</UserSessionCredentials>
+							</soap:Header>
+ 							<soap:Body>
+								<SubscribeEvent xmlns=\"http://www.peoplevox.net/\">
+									<eventType>".$eventType."</eventType>
+									<filter></filter>
+									<callbackUrl>".$callBackURL."</callbackUrl>
+								</SubscribeEvent>
+							</soap:Body>
+						</soap:Envelope>";
+			//$response = $request;
+			$response = $this->postPVXRequest($this->url, $request);
+			return $response;
+	}
+	
+	public function resetSubscribe()
+	{
+	
+	
+	}
+	
+	
 	public function GetPurchaseOrderData()
 	{
 		//get some data
@@ -153,6 +187,33 @@ class PVX_API
 			}
 		}
 	} 
+	
+	private function postPVXRequest($url,$request){
+        try{
+            $ch = curl_init($url);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+            curl_setopt($ch, CURLOPT_TIMEOUT, 4);
+            curl_setopt($ch, CURLOPT_POSTFIELDS, $request);
+            curl_setopt($ch, CURLOPT_HTTPHEADER, array('Connection: close'));
+            $response = curl_exec($ch);
+            $httpcode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            curl_close($ch);
+
+            if ($httpcode === 200) {
+                return $response;
+            }else{
+                $error = strip_tags($response);
+            	//Mage::log($e->getMessage(),null,Invent_Chasepaymentech_Model_Source_Consts::CHASE_ERROR_LOGFILE);
+                //return false;
+                return $error;
+            }
+        } catch (Exception $e) {
+            // Log Exception.
+            //Mage::log($e->getMessage(),null,Invent_Chasepaymentech_Model_Source_Consts::CHASE_ERROR_LOGFILE);
+            return $e->getMessage();
+            //return false;
+        }
+    }
 }
 
 

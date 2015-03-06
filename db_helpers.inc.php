@@ -6,7 +6,7 @@ function InsertStringIntoDatabase($pdo, $sku, $qty)
 {
 	
 	$sql = "insert into pvx_stockchange (sku, qty, time_s) values ('".$sku."',".$qty.", NOW());";
-	echo $sql;
+	//echo $sql;
 	
 	try
 	{
@@ -15,7 +15,7 @@ function InsertStringIntoDatabase($pdo, $sku, $qty)
 	}
 	catch (PDOException $e)
 	{
-	  echo $e;
+	  //echo $e;
 	  exit();
 	}
  
