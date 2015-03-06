@@ -53,15 +53,6 @@ class PVX_API
 	}
 
 	
-	
-	
-	public function resetSubscribe()
-	{
-	
-	
-	}
-	
-	
 	public function GetPurchaseOrderData()
 	{
 		//get some data
@@ -84,11 +75,6 @@ class PVX_API
 	{
 		if($this->loggedIn)
 		{
-			$this->errorOccurred = false;
-			// set headers to contain session ID and client ID
-			$UserSessionCredentials	= array('ClientId' => $this->clientID, 'SessionId' => $this->sessionID, 'UserId' => null);
-			$header = new SoapHeader(self::PVX_NS, 'UserSessionCredentials', $UserSessionCredentials);
-			$this->client->__setSoapHeaders($header);
 			
 			// create the SOAP request body
 			$getRequest = array('TemplateName' => $templateName, 'PageNo' => $pageNo, 'ItemsPerPage' => self::ITEMS_PER_PAGE, 'SearchClause' => $searchClause);
@@ -97,16 +83,11 @@ class PVX_API
 			if ($this->debugmode) {echo('<PRE>DEBUGMODE: GET DATA PARAMS: '.print_r($getRequestObj, true)."</PRE>");}
 		
 			// make the SOAP call to PVX GetData
-			$response = $this->client->GetData($getRequestObj);
+			$response = doSOAPCall('GetData', $getRequestObj);
 			
 			if ($this->debugmode) 
-			{
-				echo('<PRE>DEBUGMODE: GetData XML Exchange:</PRE>');
-				echo "<PRE>REQUEST:\n" . htmlentities(str_ireplace('><', ">\n<", $this->client->__getLastRequest())) . "\n</PRE>";
-				echo "<PRE>RESPONSE:\n" . htmlentities(str_ireplace('><', ">\n<", $this->client->__getLastResponse())) . "\n</PRE>";
-			}
-			
-			if (!is_soap_fault($response) && $response->GetDataResult->ResponseId == 0)
+		
+			if (($response) && $response->GetDataResult->ResponseId == 0)
 			{
 				$this->TotalRows = $response->GetDataResult->TotalCount;
 				$this->currentPageNo = $pageNo;
@@ -118,7 +99,7 @@ class PVX_API
 			else
 			{
 				$this->errorOccurred = true;
-				return(null);
+				return false;
 			}
 				
 			
@@ -171,29 +152,37 @@ class PVX_API
 	{
 	if($this->loggedIn)
 		{
-			$this->errorOccurred = false;
-			// set headers to contain session ID and client ID
-			$UserSessionCredentials	= array('ClientId' => $this->clientID, 'SessionId' => $this->sessionID, 'UserId' => null);
-			$header = new SoapHeader(self::PVX_NS, 'UserSessionCredentials', $UserSessionCredentials);
-			$this->client->__setSoapHeaders($header);
-			
 			// create the SOAP request body
 			$getRequestObj = array('eventType' => $eventType, 'filter' => "", 'callbackUrl' => $callBackURL );
-			//$getRequestObj = array('getRequest' => $getRequest);
 			
-			if ($this->debugmode) {echo('<PRE>DEBUGMODE: GET DATA PARAMS: '.print_r($getRequestObj, true)."</PRE>");}
-		
-			// make the SOAP call to PVX GetData
-			$response = $this->client->SubscribeEvent($getRequestObj);
+			$response = $this->doSOAPCall('SubscribeEvent', $getRequestObj);
 			
-			if ($this->debugmode) 
+
+			if (($response) && $response->SubscribeEventResult->ResponseId == 0)
 			{
-				echo('<PRE>DEBUGMODE: SubscribeEventResponse XML Exchange:</PRE>');
-				echo "<PRE>REQUEST:\n" . htmlentities(str_ireplace('><', ">\n<", $this->client->__getLastRequest())) . "\n</PRE>";
-				echo "<PRE>RESPONSE:\n" . htmlentities(str_ireplace('><', ">\n<", $this->client->__getLastResponse())) . "\n</PRE>";
+				return $response->SubscribeEventResult->Detail ;
 			}
+			else
+			{
+				$this->errorOccurred = true;
+				return false;
+			}
+				
+		}
+	}
+	
+	public function unsubscribeEvent($subscriptionID)
+	{
+			// create the SOAP request body
+			$getRequestObj = array('subscriptionId' => $subscriptionID);
 			
-			if (!is_soap_fault($response) && $response->SubscribeEventResult->ResponseId == 0)
+			if ($this->debugmode) {echo('<PRE>DEBUGMODE: UnsubscribeEvent:  SubscriptionID '.print_r($getRequestObj, true)."</PRE>");}
+		
+			
+			$response = $this->doSOAPCall('UnsubscribeEvent', $getRequestObj);
+			
+
+			if (($response) && $response->UnsubscribeEventResult->ResponseId == 0)
 			{
 				return true;
 			}
@@ -203,29 +192,21 @@ class PVX_API
 				return false;
 			}
 				
-			
-		}
 	}
 	
-	public function unsubscribeEvent
+	private function doSOAPCall($function_name, $soap_request_body)
 	{
 	
-	}
-	
-	private function doSOAPCall($soap_request_body, $function_name, $result_name)
-	{
-	
-	if($this->loggedIn) {
 		try
 		{
 			$this->errorOccurred = false;
 			$UserSessionCredentials	= array('ClientId' => $this->clientID, 'SessionId' => $this->sessionID, 'UserId' => null);
 			$header = new SoapHeader(self::PVX_NS, 'UserSessionCredentials', $UserSessionCredentials);
 			$this->client->__setSoapHeaders($header);
-					if ($this->debugmode) {echo('<PRE>DEBUGMODE: GET DATA PARAMS: '.print_r($getRequestObj, true)."</PRE>");}
+					if ($this->debugmode) {echo('<PRE>DEBUGMODE: GET DATA PARAMS: '.print_r($soap_request_body, true)."</PRE>");}
 		
 			// make the SOAP call to PVX GetData
-			$response = call_use_func('$this->client->'.$function_name, $getRequestObj);
+			$response = call_user_func(array($this->client, $function_name), $soap_request_body);
 			
 			if ($this->debugmode) 
 			{
