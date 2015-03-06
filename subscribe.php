@@ -14,13 +14,17 @@ if ($myPVX->LoggedIn() == false) { print 'NO'; } else
 	print 'YES<br>';
 	print 'Set Subscribed Event....<br>';
 
-	$callbackUrl = 'http://adhoc.corset-story.eu/PVXMageConnect/ItemCode={ItemCode}&Available={Available}';
+	$callbackUrl = 'http://www.trsoft.co.uk/PVXMageConnect/?ItemCode={ItemCode}&Available={Available}';
 	$eventType = 'AvailabilityChanges';
 
-	$result = $myPVX->subscribeEvent($eventType, $callbackUrl);
-
-	htmlout($result);
-
+	if ($myPVX->subscribeEventSOAP($eventType, $callbackUrl))
+	{
+		echo '<br>Callback set successfully';
+	}
+	else
+	{
+		echo '<br>Callback set FAILED';
+	}
 }
 
 

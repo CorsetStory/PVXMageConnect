@@ -1,5 +1,5 @@
 <?php
-define("DEBUGMODE", false);
+define("DEBUGMODE", True);
 define("TESTMODE", True);
 
 
@@ -9,14 +9,14 @@ if (defined('TESTMODE') && TESTMODE == True)
 	define("CLIENT_ID", "corsets2661Qa");
 	define("USER_NAME", "ReadOnly");
 	define("PASSWORD", "r0enaldy14");
-	define("URL", "http://qa1.peoplevox.net/corsets2661Qa/resources/integrationservicev4.asmx?wsdl");
+	define("URL", "http://qa1.peoplevox.net/corsets2661Qa/resources/integrationservicev4.asmx");
 }
 else
 {
 // Live PVX system
-//	define("CLIENT_ID", "corsetsuk2600");
-//	define("USER_NAME", "ReadOnly");
-//	define("PASSWORD", "r0enaldy14");
+//	define("CLIENT_ID", "<hide>");
+//	define("USER_NAME", "<hide>");
+//	define("PASSWORD", "<hide>");
 //	define("URL", "http://emea.peoplevox.net/corsetsuk2600/resources/integrationservicev4.asmx?wsdl");
 }
 
@@ -36,6 +36,7 @@ class PVX_API
 	private $morePages;
 	private $url;
 	public $errorOccurred;
+	public $errorMessage;
 
 			
 	function __construct()
@@ -52,29 +53,7 @@ class PVX_API
 	}
 
 	
-	public function subscribeEvent($eventType, $callBackURL)
-	{
-			$request = "<soap:Envelope xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" 
-										xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" 
-										xmlns:soap=\"http://schemas.xmlsoap.org/soap/envelope/\">
-							<soap:Header>
-								<UserSessionCredentials xmlns=\"http://www.peoplevox.net/\">
-									<ClientId>".$this->clientID."</ClientId>
-									<SessionId>".$this->sessionID."</SessionId>
-								</UserSessionCredentials>
-							</soap:Header>
- 							<soap:Body>
-								<SubscribeEvent xmlns=\"http://www.peoplevox.net/\">
-									<eventType>".$eventType."</eventType>
-									<filter></filter>
-									<callbackUrl>".$callBackURL."</callbackUrl>
-								</SubscribeEvent>
-							</soap:Body>
-						</soap:Envelope>";
-			//$response = $request;
-			$response = $this->postPVXRequest($this->url, $request);
-			return $response;
-	}
+	
 	
 	public function resetSubscribe()
 	{
@@ -165,7 +144,7 @@ class PVX_API
 			if(defined('DEBUGMODE') && DEBUGMODE == True)
 			{ 
 				echo('<PRE>DEBUGMODE: '.print_r($params, true).'</PRE>');
-				$this->client = new SoapClient($url, array("trace" => 1, "exception" => 0));
+				$this->client = new SoapClient($url."?wsdl", array("trace" => 1, "exception" => 0));
 				//echo('<PRE>DEBUGMODE: '.print_r($client->__getTypes(), true).'</PRE>');
 			} 
 			else 
@@ -188,15 +167,149 @@ class PVX_API
 		}
 	} 
 	
+	public function subscribeEvent($eventType, $callBackURL)
+	{
+	if($this->loggedIn)
+		{
+			$this->errorOccurred = false;
+			// set headers to contain session ID and client ID
+			$UserSessionCredentials	= array('ClientId' => $this->clientID, 'SessionId' => $this->sessionID, 'UserId' => null);
+			$header = new SoapHeader(self::PVX_NS, 'UserSessionCredentials', $UserSessionCredentials);
+			$this->client->__setSoapHeaders($header);
+			
+			// create the SOAP request body
+			$getRequestObj = array('eventType' => $eventType, 'filter' => "", 'callbackUrl' => $callBackURL );
+			//$getRequestObj = array('getRequest' => $getRequest);
+			
+			if ($this->debugmode) {echo('<PRE>DEBUGMODE: GET DATA PARAMS: '.print_r($getRequestObj, true)."</PRE>");}
+		
+			// make the SOAP call to PVX GetData
+			$response = $this->client->SubscribeEvent($getRequestObj);
+			
+			if ($this->debugmode) 
+			{
+				echo('<PRE>DEBUGMODE: SubscribeEventResponse XML Exchange:</PRE>');
+				echo "<PRE>REQUEST:\n" . htmlentities(str_ireplace('><', ">\n<", $this->client->__getLastRequest())) . "\n</PRE>";
+				echo "<PRE>RESPONSE:\n" . htmlentities(str_ireplace('><', ">\n<", $this->client->__getLastResponse())) . "\n</PRE>";
+			}
+			
+			if (!is_soap_fault($response) && $response->SubscribeEventResult->ResponseId == 0)
+			{
+				return true;
+			}
+			else
+			{
+				$this->errorOccurred = true;
+				return false;
+			}
+				
+			
+		}
+	}
+	
+	public function unsubscribeEvent
+	{
+	
+	}
+	
+	private function doSOAPCall($soap_request_body, $function_name, $result_name)
+	{
+	
+	if($this->loggedIn) {
+		try
+		{
+			$this->errorOccurred = false;
+			$UserSessionCredentials	= array('ClientId' => $this->clientID, 'SessionId' => $this->sessionID, 'UserId' => null);
+			$header = new SoapHeader(self::PVX_NS, 'UserSessionCredentials', $UserSessionCredentials);
+			$this->client->__setSoapHeaders($header);
+					if ($this->debugmode) {echo('<PRE>DEBUGMODE: GET DATA PARAMS: '.print_r($getRequestObj, true)."</PRE>");}
+		
+			// make the SOAP call to PVX GetData
+			$response = call_use_func('$this->client->'.$function_name, $getRequestObj);
+			
+			if ($this->debugmode) 
+			{
+				echo('<PRE>DEBUGMODE: SubscribeEventResponse XML Exchange:</PRE>');
+				echo "<PRE>REQUEST:\n" . htmlentities(str_ireplace('><', ">\n<", $this->client->__getLastRequest())) . "\n</PRE>";
+				echo "<PRE>RESPONSE:\n" . htmlentities(str_ireplace('><', ">\n<", $this->client->__getLastResponse())) . "\n</PRE>";
+			}
+			
+			return $response;
+			
+		}
+		catch (Exception $e)
+		{
+			$this->errorOccurred = true;
+			$this->errorMessage =  $e->getMessage();
+			return false;	
+		}			
+			
+	
+	}
+	
+	
+	
+		/*
+	public function subscribeEvent($eventType, $callBackURL)
+	{
+			$request = '<soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+										xmlns:xsd="http://www.w3.org/2001/XMLSchema" 
+										xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+							<soap:Header>
+								<UserSessionCredentials xmlns="http://www.peoplevox.net/">
+									<UserId></UserId>
+									<ClientId>'.$this->clientID.'</ClientId>
+									<SessionId>'.$this->sessionID.'</SessionId>
+								</UserSessionCredentials>
+							</soap:Header>
+ 							<soap:Body>
+								<SubscribeEvent xmlns="http://www.peoplevox.net/">
+									<eventType>'.$eventType.'</eventType>
+									<filter></filter>
+									<callbackUrl>'.$callBackURL.'</callbackUrl>
+								</SubscribeEvent>
+							</soap:Body>
+						</soap:Envelope>';
+			If($this->debugmode) 
+			{ 
+				print "<BR>DEBUGMODE: SubscribeEvent:<BR>\$request: <br><pre> ";
+				htmlout($request);
+				print "</pre><BR>\$this->url:<br>";
+				htmlout($this->url, true);
+				print "</pre>";
+			}
+			$response = $this->postPVXRequest($this->url.'?op=SubscribeEvent', $request);
+			return $response;
+	}
+	
 	private function postPVXRequest($url,$request){
         try{
             $ch = curl_init($url);
-            curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-            curl_setopt($ch, CURLOPT_TIMEOUT, 4);
+            
+            curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 10);
+			curl_setopt($ch, CURLOPT_TIMEOUT,        10);
+			curl_setopt($ch, CURLOPT_RETURNTRANSFER, true );
+			curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+			curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
+			curl_setopt($ch, CURLOPT_POST,           true );               
             curl_setopt($ch, CURLOPT_POSTFIELDS, $request);
-            curl_setopt($ch, CURLOPT_HTTPHEADER, array('Connection: close'));
+
+            //$httpheaderarray = array('Host: peoplevox.net','Content-Type: text/xml; charset=utf-8', 'Content-Length: '.strlen($request),'SOAPAction: "http://www.peoplevox.net/SubscribeEvent"');
+			$httpheaderarray = array('POST /appa/resources/integrationservicev4.asmx HTTP/1.1', 'Host: qa1.peoplevox.net', 'Content-Type: text/xml; charset=utf-8', 'SOAPAction: "http://www.peoplevox.net/SubscribeEvent"', 'Content-Length: '.strlen($request));
+
+            if(defined('DEBUGMODE') && DEBUGMODE == True) { echo ('<BR><PRE>DEBUGMODE: postPVXRequest: httpheaderarray:<BR>'.print_r($httpheaderarray, true));}
+
+            curl_setopt($ch, CURLOPT_HTTPHEADER, $httpheaderarray);
+            
             $response = curl_exec($ch);
+            
+            if(defined('DEBUGMODE') && DEBUGMODE == True) { echo ('<BR><PRE>DEBUGMODE:  postPVXRequest: Curl command completed<br>');}
+             
             $httpcode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            
+            if(defined('DEBUGMODE') && DEBUGMODE == True) { echo ('<BR><PRE>DEBUGMODE:  postPVXRequest: Curl command completed, HTTP_CODE:'.$httpcode);}
+    
+            
             curl_close($ch);
 
             if ($httpcode === 200) {
@@ -210,10 +323,21 @@ class PVX_API
         } catch (Exception $e) {
             // Log Exception.
             //Mage::log($e->getMessage(),null,Invent_Chasepaymentech_Model_Source_Consts::CHASE_ERROR_LOGFILE);
+            if(defined('DEBUGMODE') && DEBUGMODE == True) { echo ('<BR><PRE>DEBUGMODE: Exception caught');}
             return $e->getMessage();
             //return false;
         }
     }
+    */
+   private function html($text)
+	{
+	  return htmlspecialchars($text, ENT_QUOTES, 'UTF-8');
+	}
+
+	function htmlout($text)
+	{
+	  echo html($text);
+	}
 }
 
 
