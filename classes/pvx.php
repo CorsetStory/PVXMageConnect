@@ -83,7 +83,7 @@ class PVX_API
 			if ($this->debugmode) {echo('<PRE>DEBUGMODE: GET DATA PARAMS: '.print_r($getRequestObj, true)."</PRE>");}
 		
 			// make the SOAP call to PVX GetData
-			$response = doSOAPCall('GetData', $getRequestObj);
+			$response = $this->doSOAPCall('GetData', $getRequestObj);
 			
 			if ($this->debugmode) 
 		
@@ -95,6 +95,42 @@ class PVX_API
 				$this->searchClause = $searchClause;
 				$this->morePages = (($this->currentPageNo) <= ($this->TotalRows / self::ITEMS_PER_PAGE));
 				return($response->GetDataResult->Detail);
+			}
+			else
+			{
+				$this->errorOccurred = true;
+				return false;
+			}
+				
+			
+		}
+	}
+	
+	public function GetReportData($templateName, $pageNo, $searchClause, $Columns, $OrderBy)
+	{
+		// currently sharing paging with GetData - probably want to separate those!
+		if($this->loggedIn)
+		{
+			
+			// create the SOAP request body
+			$getReportRequest = array('TemplateName' => $templateName, 'PageNo' => $pageNo, 'ItemsPerPage' => self::ITEMS_PER_PAGE, 'OrderBy' => $OrderBy, 'Columns' => $Columns, 'SearchClause' => $searchClause);
+			$getRequestObj = array('getReportRequest' => $getReportRequest);
+			
+			if ($this->debugmode) {echo('<PRE>DEBUGMODE: GET DATA PARAMS: '.print_r($getRequestObj, true)."</PRE>");}
+		
+			// make the SOAP call to PVX GetData
+			$response = $this->doSOAPCall('GetReportData', $getRequestObj);
+			
+			if ($this->debugmode) 
+		
+			if (($response) && $response->GetReportDataResult->ResponseId == 0)
+			{
+				$this->TotalRows = $response->GetReportDataResult->TotalCount;
+				$this->currentPageNo = $pageNo;
+				$this->templateName = $templateName;
+				$this->searchClause = $searchClause;
+				$this->morePages = (($this->currentPageNo) <= ($this->TotalRows / self::ITEMS_PER_PAGE));
+				return($response->GetReportDataResult->Detail);
 			}
 			else
 			{

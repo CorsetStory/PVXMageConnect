@@ -49,7 +49,32 @@ if (isset($_REQUEST['unsubscribe']))
 	}
 }
 	
+if (isset($_REQUEST['get_data']))
+{
+
+
+	$myPVX = new PVX_API();
+
+	if ($myPVX->LoggedIn())  
+	{ 
+		print_r($myPVX->GetData($_REQUEST['template_name'], 1, ''), true);
+	}
 	
+}
+
+if (isset($_REQUEST['get_reportdata']))
+{
+
+
+	$myPVX = new PVX_API();
+
+	if ($myPVX->LoggedIn())  
+	{ 
+		print_r($myPVX->GetReportData($_REQUEST['template_name'], 1, $_REQUEST['search'], $_REQUEST['columns'], ''), true);
+	}
+	
+}
+
 ?>
 
 <html lang="en">
@@ -62,8 +87,23 @@ if (isset($_REQUEST['unsubscribe']))
 	</form>
 	<p></p>
 	<form action="?unsubscribe" method="post">ID to unsubscribe:<br>
-		<input type=text name="unsubID", value="13"><br> 
+		<input type=text name="unsubID", value="1"><br> 
 		<input type=submit value="Unsubscribe">
+	</form>
+	<p></p>
+	<form action="?get_data" method="post">
+		GetData Template Name:<br>
+		<input type=text name="template_name" value="Despatches" size="100"><br> 
+		<input type=submit value="Get Data">
+	</form>
+	<form action="?get_reportdata" method="post">
+		Template Name:<br>
+		<input type=text name="template_name" value="Despatch Summary" size="100"><br> 
+		Columns:<br>
+		<input type=text name="columns" value="[Salesorder number], [Despatch Number], [Tracking number], [Item]" size="100"><br>
+		SearchClause:<br>
+		<input type=text name="search" size="100"><br>
+		<input type=submit value="Get Report Data">
 	</form>
 </body>
 </html>
