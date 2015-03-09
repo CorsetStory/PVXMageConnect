@@ -1,6 +1,6 @@
 <?php
-include_once $_SERVER['DOCUMENT_ROOT'] . '/PVXMageConnect/classes/pvx.php';
-include_once $_SERVER['DOCUMENT_ROOT'] . '/PVXMageConnect/helpers.inc.php';
+include_once '/classes/pvx.php';
+include_once 'helpers.inc.php';
 
 
 if (isset($_REQUEST['subscribe']))
