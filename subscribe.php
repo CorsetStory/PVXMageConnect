@@ -86,7 +86,7 @@ if (isset($_REQUEST['get_reportdata']))
 		<input type=radio name="event_type" value="SalesOrderStatusChanges">SalesOrderStatusChanges
 		<input type=radio name="event_type" value="TrackingNumberReceived">TrackingNumberReceived
 		<BR>
-		<input type=text name="subscribe_text" value="http://adhoc.corset-story.eu/PVXMageConnect/?ItemCode={ItemCode}&Available={Available}" size="100"><br> 
+		<input type=text name="subscribe_text" value="http://adhoc.corset-story.eu/?Event=Availability&ItemCode={ItemCode}&Available={Available}" size="100"><br> 
 		<input type=submit value="Subscribe">
 	</form>
 	<p></p>
