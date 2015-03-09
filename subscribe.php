@@ -1,5 +1,5 @@
 <?php
-include_once '/classes/pvx.php';
+include_once 'classes/pvx.php';
 include_once 'helpers.inc.php';
 
 
