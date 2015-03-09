@@ -5,12 +5,12 @@ include_once 'db_helpers.inc.php';
 include_once 'helpers.inc.php';
 include_once 'display.inc.php';
 
-if (isset($_REQUEST['Availability'], $_REQUEST['ItemCode'], $_REQUEST['Available']))
+if (isset($_REQUEST['Event'], $_REQUEST['ItemCode'], $_REQUEST['Available']) && $_REQUEST['Event'] == 'Availability' )
 {
 	//echo 'Itemcode & Availble Set';
 	$result =  DB_AvailabilityChange($pdo, $_REQUEST['ItemCode'], $_REQUEST['Available']);
 } 
-elseif (isset($_REQUEST['Shipment']))
+elseif (isset($_REQUEST['Event']) && $_REQUEST['Event'] == 'Shipment' )
 {
 	$result =  DB_Shipment($pdo, $_REQUEST['OrderNumber'], $_REQUEST['DespatchNumber'],$_REQUEST['TrackingNumber'], $_REQUEST['SKU'],$_REQUEST['Qty'] );
 }

@@ -21,11 +21,11 @@ function DB_AvailabilityChange($pdo, $sku, $qty)
  
 }
 
-function DB_Shipment($order_number, $despatch_number, $tracking_number, $sku, $qty)
+function DB_Shipment($pdo, $order_number, $despatch_number, $tracking_number, $sku, $qty)
 {
 	
-	$sql = "insert into pvx_shipment (order_number, despatch_number, tracking_number, sku, qty, status)) values ('".$order_number."','".$despatch_number."','".$tracking_number."','".$sku."',".$qty.", 'Pending';)";
-	//echo $sql;
+	$sql = "insert into pvx_shipment (order_number, despatch_number, tracking_number, sku, qty, status) values ('".$order_number."','".$despatch_number."','".$tracking_number."','".$sku."',".$qty.", 'Pending');";
+	echo $sql;
 	
 	try
 	{
@@ -34,8 +34,9 @@ function DB_Shipment($order_number, $despatch_number, $tracking_number, $sku, $q
 	}
 	catch (PDOException $e)
 	{
-	  //echo $e;
+	  echo $e;
 	  exit();
 	}
+	
  
 }
