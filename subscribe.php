@@ -13,7 +13,7 @@ if (isset($_REQUEST['subscribe']))
 	{ 
 
 		$callbackUrl = $_REQUEST['subscribe_text'];
-		$eventType = 'AvailabilityChanges';
+		$eventType = $_REQUEST['event_type'];
 
 		if ($myPVX->subscribeEvent($eventType, $callbackUrl))
 		{
@@ -82,7 +82,11 @@ if (isset($_REQUEST['get_reportdata']))
 <body>
 	<form action="?subscribe" method="post">
 		Subscribe Text:<br>
-		<input type=text name="subscribe_text" value="http://www.trsoft.co.uk/PVXMageConnect/?ItemCode={ItemCode}&Available={Available}" size="100"><br> 
+		<input type=radio name="event_type" value="AvailabilityChanges" checked>AvailabilityChanges
+		<input type=radio name="event_type" value="SalesOrderStatusChanges">SalesOrderStatusChanges
+		<input type=radio name="event_type" value="TrackingNumberReceived">TrackingNumberReceived
+		<BR>
+		<input type=text name="subscribe_text" value="http://adhoc.corset-story.eu/PVXMageConnect/?ItemCode={ItemCode}&Available={Available}" size="100"><br> 
 		<input type=submit value="Subscribe">
 	</form>
 	<p></p>
@@ -100,7 +104,7 @@ if (isset($_REQUEST['get_reportdata']))
 		Template Name:<br>
 		<input type=text name="template_name" value="Despatch Summary" size="100"><br> 
 		Columns:<br>
-		<input type=text name="columns" value="[Salesorder number], [Despatch Number], [Tracking number], [Item]" size="100"><br>
+		<input type=text name="columns" value="[Salesorder number],[Requested delivery date],[Carrier],[Service],[Despatch date],Despatch number],[Tracking number],[Item],[No of items],[Destination country]" size="100"><br>
 		SearchClause:<br>
 		<input type=text name="search" size="100"><br>
 		<input type=submit value="Get Report Data">

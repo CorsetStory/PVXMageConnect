@@ -1,6 +1,6 @@
 <?php
 define("DEBUGMODE", True);
-define("TESTMODE", True);
+define("TESTMODE", true);
 
 
 if (defined('TESTMODE') && TESTMODE == True)
@@ -10,20 +10,22 @@ if (defined('TESTMODE') && TESTMODE == True)
 	define("USER_NAME", "ReadOnly");
 	define("PASSWORD", "r0enaldy14");
 	define("URL", "http://qa1.peoplevox.net/corsets2661Qa/resources/integrationservicev4.asmx");
+	define("PVX_NAMESPACE", "http://www.peoplevox.net/");
 }
 else
 {
 // Live PVX system
-//	define("CLIENT_ID", "<hide>");
-//	define("USER_NAME", "<hide>");
-//	define("PASSWORD", "<hide>");
-//	define("URL", "http://emea.peoplevox.net/corsetsuk2600/resources/integrationservicev4.asmx?wsdl");
+	define("CLIENT_ID", "<hide>");
+	define("USER_NAME", "<hide>");
+	define("PASSWORD", "<hide>");
+	define("URL", "http://emea.peoplevox.net/corsetsuk2600/resources/integrationservicev4.asmx");
+	define("PVX_NAMESPACE", "http://www.peoplevox.net/");
 }
 
 class PVX_API
 {
-	const ITEMS_PER_PAGE = 10;
-	const PVX_NS = "http://www.peoplevox.net/";
+	const ITEMS_PER_PAGE = 50;
+	const PVX_NS = PVX_NAMESPACE;
 	
 	private $clientID;
 	private $sessionID;
