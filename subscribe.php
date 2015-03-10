@@ -1,7 +1,19 @@
 <?php
 include_once 'classes/pvx.php';
+include_once 'classes/pvx_orders.php';
 include_once 'helpers.inc.php';
 
+
+if (isset($_REQUEST['GetDespatchedOrders']))
+{
+
+
+	$myPVX = new PVX_Order();
+
+	$response = $myPVX->getDespatchedOrders('2015-03-10 08:00');
+	
+	echo '<br>Response:<br>'.$response;
+}
 
 if (isset($_REQUEST['subscribe']))
 {
@@ -70,14 +82,14 @@ if (isset($_REQUEST['get_reportdata']))
 
 	if ($myPVX->LoggedIn())  
 	{ 
-		print_r($myPVX->GetReportData($_REQUEST['template_name'], 1, $_REQUEST['search'], $_REQUEST['columns'], ''), true);
+		$response = $myPVX->GetReportData($_REQUEST['template_name'], 1, $_REQUEST['search'], $_REQUEST['columns'], '');
+		echo $response;
 	}
 	
 }
 
 ?>
 
-<html lang="en">
 <H1>PVX Set up Event Capture for Stock Changes</H1>
 <body>
 	<form action="?subscribe" method="post">
@@ -104,10 +116,13 @@ if (isset($_REQUEST['get_reportdata']))
 		Template Name:<br>
 		<input type=text name="template_name" value="Despatch Summary" size="100"><br> 
 		Columns:<br>
-		<input type=text name="columns" value="[Salesorder number],[Requested delivery date],[Carrier],[Service],[Despatch date],Despatch number],[Tracking number],[Item],[No of items],[Destination country]" size="100"><br>
+		<input type=text name="columns" value="[Salesorder number],[Requested delivery date],[Carrier],[Service],[Despatch date],[Despatch number],[Tracking number],[Item],[No of items],[Destination country]" size="100"><br>
 		SearchClause:<br>
 		<input type=text name="search" size="100"><br>
 		<input type=submit value="Get Report Data">
+	</form>
+	<form action="?GetDespatchedOrders" method="post">Get Despatched Orders:<br><br> 
+		<input type=submit value="Get Despatched Orders">
 	</form>
 </body>
 </html>
