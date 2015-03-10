@@ -8,9 +8,9 @@ if (isset($_REQUEST['GetDespatchedOrders']))
 {
 
 
-	$myPVX = new PVX_Order();
+	$myPVX = new PVX_API("corsets2661Qa", "ReadOnly", "r0enaldy14", "http://qa1.peoplevox.net/corsets2661Qa/resources/integrationservicev4.asmx");
 
-	$response = $myPVX->getDespatchedOrders('2015-03-10 08:00');
+	$response = $myPVX->getDespatchedOrders('2015-02-10 08:00');
 	
 	echo '<br>Response:<br>'.$response;
 }
@@ -19,7 +19,7 @@ if (isset($_REQUEST['subscribe']))
 {
 
 
-	$myPVX = new PVX_API();
+	$myPVX = new PVX_API("corsets2661Qa", "ReadOnly", "r0enaldy14", "http://qa1.peoplevox.net/corsets2661Qa/resources/integrationservicev4.asmx");
 
 	if ($myPVX->LoggedIn())  
 	{ 
@@ -42,7 +42,7 @@ if (isset($_REQUEST['unsubscribe']))
 {
 
 
-	$myPVX = new PVX_API();
+	$myPVX = new PVX_API("corsets2661Qa", "ReadOnly", "r0enaldy14", "http://qa1.peoplevox.net/corsets2661Qa/resources/integrationservicev4.asmx");
 
 	if ($myPVX->LoggedIn())  
 	{ 
@@ -65,7 +65,7 @@ if (isset($_REQUEST['get_data']))
 {
 
 
-	$myPVX = new PVX_API();
+	$myPVX = new PVX_API("corsets2661Qa", "ReadOnly", "r0enaldy14", "http://qa1.peoplevox.net/corsets2661Qa/resources/integrationservicev4.asmx");
 
 	if ($myPVX->LoggedIn())  
 	{ 
@@ -78,7 +78,7 @@ if (isset($_REQUEST['get_reportdata']))
 {
 
 
-	$myPVX = new PVX_API();
+	$myPVX = new PVX_API("corsets2661Qa", "ReadOnly", "r0enaldy14", "http://qa1.peoplevox.net/corsets2661Qa/resources/integrationservicev4.asmx");
 
 	if ($myPVX->LoggedIn())  
 	{ 

@@ -1,8 +1,9 @@
 <?php
 define("DEBUGMODE", false);
 define("TESTMODE", true);
+define("PVX_NAMESPACE", "http://www.peoplevox.net/");
 
-
+/*
 if (defined('TESTMODE') && TESTMODE == True)
 {
 // Test/QA PVX System
@@ -10,7 +11,7 @@ if (defined('TESTMODE') && TESTMODE == True)
 	define("USER_NAME", "ReadOnly");
 	define("PASSWORD", "r0enaldy14");
 	define("URL", "http://qa1.peoplevox.net/corsets2661Qa/resources/integrationservicev4.asmx");
-	define("PVX_NAMESPACE", "http://www.peoplevox.net/");
+
 }
 else
 {
@@ -21,6 +22,9 @@ else
 	define("URL", "http://emea.peoplevox.net/corsetsuk2600/resources/integrationservicev4.asmx");
 	define("PVX_NAMESPACE", "http://www.peoplevox.net/");
 }
+*/
+
+
 
 class PVX_API
 {
@@ -41,6 +45,20 @@ class PVX_API
 	public $errorMessage;
 
 			
+	function __construct($clientID,$Username,$Password,$URL)
+	{
+		$this->debugmode = (defined('DEBUGMODE') && DEBUGMODE == True);
+		$this->loggedIn = false;
+		$this->errorOccurred = false;
+		$this->url = $URL;
+		$this->logintoAPI ($clientID,$Username,$Password, $this->url);
+		If($this->debugmode) 
+		{ 
+			if($this->loggedIn) { print "<BR>DEBUGMODE: LOGGED IN: ".$this->sessionID."; clientID = ".$this->clientID;} else { print "<BR>DEBUGMODE: LOG IN FAILED :-(";}
+		}
+	}
+	
+	/*
 	function __construct()
 	{
 		$this->debugmode = (defined('DEBUGMODE') && DEBUGMODE == True);
@@ -53,7 +71,7 @@ class PVX_API
 			if($this->loggedIn) { print "<BR>DEBUGMODE: LOGGED IN: ".$this->sessionID."; clientID = ".$this->clientID;} else { print "<BR>DEBUGMODE: LOG IN FAILED :-(";}
 		}
 	}
-
+	*/
 	
 	public function GetPurchaseOrderData()
 	{
@@ -87,7 +105,7 @@ class PVX_API
 			// make the SOAP call to PVX GetData
 			$response = $this->doSOAPCall('GetData', $getRequestObj);
 			
-			if ($this->debugmode) 
+			//if ($this->debugmode) 
 		
 			if (($response) && $response->GetDataResult->ResponseId == 0)
 			{

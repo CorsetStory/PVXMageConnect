@@ -28,12 +28,28 @@ class PVX_Order
 	
 	private $PVX;
 	private $debugmode;
+	private $pdo;
+	private $do_ok;
 		
 	function __construct()
 	{
 		$this->debugmode = (defined('PVXO_DEBUGMODE') && PVXO_DEBUGMODE == True);
 		$this->PVX = new PVX_API();
-		
+		try
+		{
+		  $this->pdo = new PDO('mysql:host=localhost;dbname=adhoc', 'adhoc', 'nGtE4t2Q');
+  
+		  $this->pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+		  $this->pdo->exec('SET NAMES "latin1"');
+		  $this->pdo->exec('use adhoc');
+		  $this->db_ok = true;
+		}
+		catch (PDOException $e)
+		{
+		  $this->db_ok = false;
+		  exit();
+		}
+
 	}
 	
 	public function getDespatchedOrders($sinceDateTime)
@@ -58,12 +74,35 @@ class PVX_Order
 			while ($response = $this->PVX->GetReportData($template_name, $page_no, $search, $columns, $order_by)) 
 			{
 				//echo 'hello...response:'.$response; 
-				$result .= $response;
+				
+				foreach($response as $row) {
+					$fields = explode(",", $row);
+					DB_Shipment($fields[0], $fields[1], $fields[2], $fields[3], 0);
+				}
+				//$result .= $response;
 				$page_no += 1;		
 				if(($this->debugmode) && ($page_no > 1)) { return $result; }
 			} 
-		}
-	return $result;	
+		}	
 	} 
+	
+	function DB_Shipment( $order_number, $despatch_number, $tracking_number, $sku, $qty)
+	{
+	
+	$sql = "insert into pvx_shipment (order_number, despatch_number, tracking_number, sku, qty, status) values ('".$order_number."','".$despatch_number."','".$tracking_number."','".$sku."',".$qty.", 'Pending');";
+	echo $sql;
+	
+	try
+	{
+		$result = $this->pdo->query($sql);
+		
+	}
+	catch (PDOException $e)
+	{
+	  return false;
+	}
+	
+ 	return $result;
+}
 }
 
