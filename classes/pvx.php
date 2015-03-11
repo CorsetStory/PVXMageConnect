@@ -21,6 +21,8 @@ class PVX_API
 	public $errorMessage;
 	public $currentPageNo;
 	public $morePages;
+	public $SaveDataDetail;
+	public $partial_import;
 
 			
 	function __construct($clientID,$Username,$Password,$URL)
@@ -40,8 +42,10 @@ class PVX_API
 	public function SaveData($templateName, $csv_data)
 	{
 		// Import Data in PVX WMS
-		// Returns - Number of rows imported if successful.
-		//			 False if unsuccessful
+		// Returns: 	Number of rows imported (if successful).
+		//			 	False (if unsuccessful)
+		//  Also sets: 	SaveDataDetail (details of import errors)
+		//				partial_import (true - if partially successful, false otherwise)
 		
 		if(!$this->loggedIn)
 		{
@@ -62,13 +66,13 @@ class PVX_API
 		$response = $this->doSOAPCall('SaveData', $saveRequestObj);
 		
 	
-		if (($response) && $response->SaveDataResult->ResponseId == 0)
-		{
-			return($response->SaveDataResult->TotalCount);  // No of rows saved.
+		if ($response) {
+			// SOAP Call succeeded
+			$this->partial_import = ($response->SaveDataResult->TotalCount > 0) && ($response->SaveDataResult->ResponseId == -1);
+			$this->SaveDataDetail =explode(",",$response->SaveDataResult->Detail);
+			return (($response->SaveDataResult->TotalCount == 0) ? false : $response->SaveDataResult->TotalCount);
 		}
-		
-		// Update error message for invalid response, otherwise should already be set to the SOAP exceptions_enabled
-		if ($response) { $this->errorMessage = $response->SaveDataResult->Detail; }
+		// SOAP Call failed - errorMessage and  errorOccurred should be set...
 		return false;	
 	}
 	

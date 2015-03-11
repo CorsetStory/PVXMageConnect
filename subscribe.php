@@ -130,10 +130,11 @@ if (isset($_REQUEST['save_data']))
 	if ($myPVX->LoggedIn())  
 	{ 
 		$response = $myPVX->SaveData($_REQUEST['template_name'], $_REQUEST['csv_data']);
-		//;echo $_REQUEST['csv_data'];
-		//exit();
-		$explode = explode("\n", $response);
-		echo "<PRE>".print_r($explode, true)."</PRE>";
+	
+		echo "<PRE>SaveData Output - Response:".(($response)?$response:'FALSE')."</PRE>";
+		echo "<PRE>SaveData Output - SaveDataDetail:".print_r($myPVX->SaveDataDetail, true)."</PRE>";
+		echo "<PRE>SaveData Output - Partial Import?:".(($myPVX->partial_import) ? 'True' :'False')."</PRE>";
+	
 	}
 	
 }
