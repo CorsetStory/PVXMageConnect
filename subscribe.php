@@ -1,9 +1,25 @@
 <?php
+define("subscribe_use_live", true);
+
+//print_r($_COOKIE);
+
+if ((isset($_REQUEST['login']) && $_POST['password']=="timlaurieonly"))
+{
+	//echo 'Correct Password!';
+	setcookie("csltd_choc_cookie", "mint_choc_chip_with_banana_and_marmite", time()+360000);
+	header("Refresh:0; url=subscribe.php");
+
+}
+else
+{
+
+if(isset($_COOKIE['csltd_choc_cookie']) && $_COOKIE['csltd_choc_cookie']=="mint_choc_chip_with_banana_and_marmite")
+
+{
+
 include_once 'classes/pvx.php';
 include_once 'classes/pvx_orders.php';
 include_once 'helpers.inc.php';
-
-define("subscribe_use_live", true);
 
 if (subscribe_use_live) {	
 	define("SUBSCRIBE_CLIENT_ID", "corsetsuk2600");
@@ -121,7 +137,6 @@ if (isset($_REQUEST['save_data']))
 	}
 	
 }
-
 ?>
 
 <H1>PVX Set up Event Capture for Stock Changes</H1>
@@ -176,6 +191,22 @@ if (isset($_REQUEST['save_data']))
 	</form>
 </body>
 </html>
-		
 
+<?php }
+else
+{
+?>
+	<H1>Private System</H1>
+	<body>
+	<H2>Enter password to continue</H2>
+	<form action="?login" method="post">
+		<input type=text name="password" value="" size="100">
+		<input type=submit value="Subscribe">
+	</form>	
+	</body>
+</html>
+<?php
+}
+}
+?>
 
