@@ -1,48 +1,26 @@
 <?php
-define("DEBUGMODE", false);
-define("TESTMODE", true);
-define("PVX_NAMESPACE", "http://www.peoplevox.net/");
-
-/*
-if (defined('TESTMODE') && TESTMODE == True)
-{
-// Test/QA PVX System
-	define("CLIENT_ID", "corsets2661Qa");
-	define("USER_NAME", "ReadOnly");
-	define("PASSWORD", "r0enaldy14");
-	define("URL", "http://qa1.peoplevox.net/corsets2661Qa/resources/integrationservicev4.asmx");
-
-}
-else
-{
-// Live PVX system
-	define("CLIENT_ID", "corsetsuk2600");
-	define("USER_NAME", "ReadOnly");
-	define("PASSWORD", "r0enaldy14");
-	define("URL", "http://emea.peoplevox.net/corsetsuk2600/resources/integrationservicev4.asmx");
-	define("PVX_NAMESPACE", "http://www.peoplevox.net/");
-}
-*/
-
+define("DEBUGMODE", true);
 
 
 class PVX_API
 {
-	const ITEMS_PER_PAGE = 50;
-	const PVX_NS = PVX_NAMESPACE;
+	const ITEMS_PER_PAGE = 10;
+	const PVX_NS = "http://www.peoplevox.net/";
 	
 	private $clientID;
 	private $sessionID;
 	private $loggedIn;
 	private $client;
 	private $debugmode;
-	private $currentPageNo;
 	private $templateName;
 	private $searchClause;
-	private $morePages;
 	private $url;
+	
+	public $totalRows;
 	public $errorOccurred;
 	public $errorMessage;
+	public $currentPageNo;
+	public $morePages;
 
 			
 	function __construct($clientID,$Username,$Password,$URL)
@@ -58,32 +36,49 @@ class PVX_API
 		}
 	}
 	
-	/*
-	function __construct()
+
+	public function SaveData($templateName, $csv_data)
 	{
-		$this->debugmode = (defined('DEBUGMODE') && DEBUGMODE == True);
-		$this->loggedIn = false;
-		$this->errorOccurred = false;
-		$this->url = URL;
-		$this->logintoAPI (CLIENT_ID, USER_NAME, PASSWORD, $this->url);
-		If($this->debugmode) 
-		{ 
-			if($this->loggedIn) { print "<BR>DEBUGMODE: LOGGED IN: ".$this->sessionID."; clientID = ".$this->clientID;} else { print "<BR>DEBUGMODE: LOG IN FAILED :-(";}
+		// Import Data in PVX WMS
+		// Returns - Number of rows imported if successful.
+		//			 False if unsuccessful
+		
+		if(!$this->loggedIn)
+		{
+			$this->errorOccurred = true;
+			$this->errorMessage = "PVX object: not logged into PVX API";
+			return false;
 		}
-	}
-	*/
+			
+		$this->errorOccurred = false;	
+			
+		// create the SOAP request body
+		$saveRequest = array('TemplateName' => $templateName, 'CsvData' => $csv_data, 'Action' => 0);  // Actions: 0 - default action; 1 - do not allocate; 2 - delete
+		$saveRequestObj = array('saveRequest' => $saveRequest);
+		
+		if ($this->debugmode) {echo('<PRE>DEBUGMODE: GET DATA PARAMS: '.print_r($saveRequestObj, true)."</PRE>");}
 	
-	public function GetPurchaseOrderData()
-	{
-		//get some data
+		// make the SOAP call to PVX GetData
+		$response = $this->doSOAPCall('SaveData', $saveRequestObj);
+		
 	
+		if (($response) && $response->SaveDataResult->ResponseId == 0)
+		{
+			return($response->SaveDataResult->TotalCount);  // No of rows saved.
+		}
+		
+		// Update error message for invalid response, otherwise should already be set to the SOAP exceptions_enabled
+		if ($response) { $this->errorMessage = $response->SaveDataResult->Detail; }
+		return false;	
 	}
+	
 	
 	public function GetNextPage()
+	// get next data page
 	{
 		if($this->morePages)
 		{
-			return ($this->GetData($this->templateName, $this->currentPageNo + 1, $this->searchClause));
+			return ($this->GetData($this->templateName, ++$this->currentPageNo, $this->searchClause));
 		}
 		else
 		{
@@ -93,74 +88,82 @@ class PVX_API
 		
 	public function GetData($templateName, $pageNo, $searchClause)
 	{
-		if($this->loggedIn)
+		if(!$this->loggedIn)
 		{
-			
-			// create the SOAP request body
-			$getRequest = array('TemplateName' => $templateName, 'PageNo' => $pageNo, 'ItemsPerPage' => self::ITEMS_PER_PAGE, 'SearchClause' => $searchClause);
-			$getRequestObj = array('getRequest' => $getRequest);
-			
-			if ($this->debugmode) {echo('<PRE>DEBUGMODE: GET DATA PARAMS: '.print_r($getRequestObj, true)."</PRE>");}
-		
-			// make the SOAP call to PVX GetData
-			$response = $this->doSOAPCall('GetData', $getRequestObj);
-			
-			//if ($this->debugmode) 
-		
-			if (($response) && $response->GetDataResult->ResponseId == 0)
-			{
-				$this->TotalRows = $response->GetDataResult->TotalCount;
-				$this->currentPageNo = $pageNo;
-				$this->templateName = $templateName;
-				$this->searchClause = $searchClause;
-				$this->morePages = (($this->currentPageNo) <= ($this->TotalRows / self::ITEMS_PER_PAGE));
-				return($response->GetDataResult->Detail);
-			}
-			else
-			{
-				$this->errorOccurred = true;
-				return false;
-			}
-				
-			
+			$this->errorOccurred = true;
+			$this->errorMessage = "PVX object: not logged into PVX API";
+			return false;
 		}
+		
+		$this->errorOccurred = false;	
+		
+		// create the SOAP request body
+		$getRequest = array('TemplateName' => $templateName, 'PageNo' => $pageNo, 'ItemsPerPage' => self::ITEMS_PER_PAGE, 'SearchClause' => $searchClause);
+		$getRequestObj = array('getRequest' => $getRequest);
+		
+		if ($this->debugmode) {echo('<PRE>DEBUGMODE: GET DATA PARAMS: '.print_r($getRequestObj, true)."</PRE>");}
+	
+		// make the SOAP call to PVX GetData
+		$response = $this->doSOAPCall('GetData', $getRequestObj);
+		
+	
+		if (($response) && $response->GetDataResult->ResponseId == 0)
+		{
+			$this->totalRows = $response->GetDataResult->TotalCount;
+			$this->currentPageNo = $pageNo;
+			$this->templateName = $templateName;
+			$this->searchClause = $searchClause;
+			$this->morePages = (($this->currentPageNo) <= ($this->totalRows / self::ITEMS_PER_PAGE));
+			
+			return($response->GetDataResult->Detail);
+		}
+				
+		// Update error message for invalid response, otherwise should already be set to the SOAP exceptions_enabled
+		if ($response) { $this->errorMessage = $response->GetDataResult->Detail; }
+		return false;
+			
 	}
 	
 	public function GetReportData($templateName, $pageNo, $searchClause, $Columns, $OrderBy)
 	{
-		// currently sharing paging with GetData - probably want to separate those!
-		if($this->loggedIn)
+		if(!$this->loggedIn)
 		{
-			
-			// create the SOAP request body
-			$getReportRequest = array('TemplateName' => $templateName, 'PageNo' => $pageNo, 'ItemsPerPage' => self::ITEMS_PER_PAGE, 'OrderBy' => $OrderBy, 'Columns' => $Columns, 'SearchClause' => $searchClause);
-			$getRequestObj = array('getReportRequest' => $getReportRequest);
-			
-			if ($this->debugmode) {echo('<PRE>DEBUGMODE: GET DATA PARAMS: '.print_r($getRequestObj, true)."</PRE>");}
-		
-			// make the SOAP call to PVX GetData
-			$response = $this->doSOAPCall('GetReportData', $getRequestObj);
-			
-			
-		
-			if (($response) && $response->GetReportDataResult->ResponseId == 0)
-			{
-	
-				$this->TotalRows = $response->GetReportDataResult->TotalCount;
-				$this->currentPageNo = $pageNo;
-				$this->templateName = $templateName;
-				$this->searchClause = $searchClause;
-				$this->morePages = (($this->currentPageNo) <= ($this->TotalRows / self::ITEMS_PER_PAGE));
-				return($response->GetReportDataResult->Detail);
-			}
-			else
-			{
-				$this->errorOccurred = true;
-				return false;
-			}
-				
-			
+			$this->errorOccurred = true;
+			$this->errorMessage = "PVX object: not logged into PVX API";
+			return false;
 		}
+		
+		$this->errorOccurred = false;	
+			
+		// create the SOAP request body
+		$getReportRequest = array('TemplateName' => $templateName, 'PageNo' => $pageNo, 'ItemsPerPage' => self::ITEMS_PER_PAGE, 'OrderBy' => $OrderBy, 'Columns' => $Columns, 'SearchClause' => $searchClause);
+		$getRequestObj = array('getReportRequest' => $getReportRequest);
+		
+		if ($this->debugmode) {echo('<PRE>DEBUGMODE: GET DATA PARAMS: '.print_r($getRequestObj, true)."</PRE>");}
+	
+		// make the SOAP call to PVX GetData
+		$response = $this->doSOAPCall('getReportData', $getRequestObj);
+		
+		
+	
+		if (($response) && $response->GetReportDataResult->ResponseId == 0)
+		{
+
+			$this->totalRows = $response->GetReportDataResult->TotalCount;
+			$this->currentPageNo = $pageNo;
+			$this->templateName = $templateName;
+			$this->searchClause = $searchClause;
+			$this->morePages = (($this->currentPageNo) <= ($this->totalRows / self::ITEMS_PER_PAGE));
+			
+			if ($this->debugmode) { echo('<PRE>DEBUGMODE: morePages: '.($this->morePages?'True':'False')."</PRE>"); }
+			
+			return($response->GetReportDataResult->Detail);
+		}
+		
+		// Update error message for invalid response, otherwise should already be set to the SOAP exceptions_enabled
+		if ($response) { $this->errorMessage = $response->GetReportDataResult->Detail; }
+		return false;
+			
 	}
 	
 	public function LoggedIn()
@@ -168,68 +171,46 @@ class PVX_API
 		return $this->loggedIn;
 	}
 	
-	private function logintoAPI($clientID, $username, $password, $url)
-	{
-		
-		
-		If(defined('DEBUGMODE') && DEBUGMODE == True) { print "<BR>DEBUGMODE: ENTERED logintoAPI(".$clientID.", ".$username.", ".$password.", ".$url; }
-		
-		if(!$this->loggedIn)
-		{
-			$params = array('clientId' => $clientID,
-							'username' => $username,
-							'password' => base64_encode($password));
-			if(defined('DEBUGMODE') && DEBUGMODE == True)
-			{ 
-				echo('<PRE>DEBUGMODE: '.print_r($params, true).'</PRE>');
-				$this->client = new SoapClient($url."?wsdl", array("trace" => 1, "exception" => 0));
-				//echo('<PRE>DEBUGMODE: '.print_r($client->__getTypes(), true).'</PRE>');
-			} 
-			else 
-			{ 
-				$this->client = new SoapClient($url."?wsdl");
-			}
-		
-			$response = $this->client->Authenticate($params);
-		
-			if(defined('DEBUGMODE') && DEBUGMODE == True) {echo('<PRE>DEBUGMODE: AUTHENTICATION RESPONSE: '.print_r($response, true)."</PRE>");}
-		
-			if(!is_soap_fault($response) && $response->AuthenticateResult->ResponseId == 0)
-			{
-				if(defined('DEBUGMODE') && DEBUGMODE == True) {echo('DEBUGMODE: NO ERRORS DETECTED AFTER CALLING PVX "Authenticate" FUNCTION');}
-				$result = explode(',',$response->AuthenticateResult->Detail);
-				$this->sessionID = $result[1];
-				$this->clientID = $result[0];
-				$this->loggedIn = true;
-			}
-		}
-	} 
-	
+
 	public function subscribeEvent($eventType, $callBackURL)
 	{
-	if($this->loggedIn)
+	
+		if(!$this->loggedIn)
 		{
-			// create the SOAP request body
-			$getRequestObj = array('eventType' => $eventType, 'filter' => "", 'callbackUrl' => $callBackURL );
-			
-			$response = $this->doSOAPCall('SubscribeEvent', $getRequestObj);
-			
-
-			if (($response) && $response->SubscribeEventResult->ResponseId == 0)
-			{
-				return $response->SubscribeEventResult->Detail ;
-			}
-			else
-			{
-				$this->errorOccurred = true;
-				return false;
-			}
-				
+			$this->errorOccurred = true;
+			$this->errorMessage = "PVX object: not logged into PVX API";
+			return false;
 		}
+		
+		$this->errorOccurred = false;	
+		
+		// create the SOAP request body
+		$getRequestObj = array('eventType' => $eventType, 'filter' => "", 'callbackUrl' => $callBackURL );
+		
+		$response = $this->doSOAPCall('SubscribeEvent', $getRequestObj);
+		
+		if (($response) && $response->SubscribeEventResult->ResponseId == 0)
+		{
+			return $response->SubscribeEventResult->Detail ;
+		}
+		
+		// Update error message for invalid response, otherwise should already be set to the SOAP exceptions_enabled
+		if ($response) { $this->errorMessage = $response->SubscribeEvent->Detail; }
+		return false;
 	}
 	
 	public function unsubscribeEvent($subscriptionID)
 	{
+			
+			if(!$this->loggedIn)
+			{
+				$this->errorOccurred = true;
+				$this->errorMessage = "PVX object: not logged into PVX API";
+				return false;
+			}
+			
+			$this->errorOccurred = false;	
+			
 			// create the SOAP request body
 			$getRequestObj = array('subscriptionId' => $subscriptionID);
 			
@@ -243,17 +224,14 @@ class PVX_API
 			{
 				return true;
 			}
-			else
-			{
-				$this->errorOccurred = true;
-				return false;
-			}
+			// Update error message for invalid response, otherwise should already be set to the SOAP exceptions_enabled
+			if ($response) { $this->errorMessage = $response->UnsubscribeEventResult->Detail; }
+			return false;
 				
 	}
 	
 	private function doSOAPCall($function_name, $soap_request_body)
 	{
-	
 		try
 		{
 			$this->errorOccurred = false;
@@ -282,21 +260,54 @@ class PVX_API
 			return false;	
 		}			
 			
-	
 	}
 	
-	
-	
-	
-   private function html($text)
+	private function logintoAPI($clientID, $username, $password, $url)
 	{
-	  return htmlspecialchars($text, ENT_QUOTES, 'UTF-8');
-	}
-
-	function htmlout($text)
-	{
-	  echo html($text);
-	}
+		try
+		{
+			$this->errorOccurred = false;
+			if($this->loggedIn) return true; //already logged in.
+			
+			$params = array('clientId' => $clientID,
+							'username' => $username,
+							'password' => base64_encode($password));
+			if(defined('DEBUGMODE') && DEBUGMODE == True)
+			{ 
+				echo('<PRE>DEBUGMODE: '.print_r($params, true).'</PRE>');
+				$this->client = new SoapClient($url."?wsdl", array("trace" => 1, "exception" => 0));
+			} 
+			else 
+			{ 
+				$this->client = new SoapClient($url."?wsdl");
+			}
+	
+			$response = $this->client->Authenticate($params);
+	
+			if(defined('DEBUGMODE') && DEBUGMODE == True) {echo('<PRE>DEBUGMODE: AUTHENTICATION RESPONSE: '.print_r($response, true)."</PRE>");}
+	
+			if(!is_soap_fault($response) && $response->AuthenticateResult->ResponseId == 0)
+			{
+				if(defined('DEBUGMODE') && DEBUGMODE == True) {echo('DEBUGMODE: NO ERRORS DETECTED AFTER CALLING PVX "Authenticate" FUNCTION');}
+				$result = explode(',',$response->AuthenticateResult->Detail);
+				$this->sessionID = $result[1];
+				$this->clientID = $result[0];
+				$this->loggedIn = true;
+				return true;
+			}
+			$this->errorOccurred = true;
+			$this->errorMessage = ($response) ? $response->GetDataResult->Detail : 'PVX->logintoAPI : Call failed';
+			return false;	
+		}
+		catch (Exception $e)
+		{
+			$this->errorOccurred = true;
+			$this->errorMessage =  $e->getMessage();
+			return false;	
+		}			
+	} 
+	
+	
 }
 
 
