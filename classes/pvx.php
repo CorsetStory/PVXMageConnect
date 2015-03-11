@@ -15,6 +15,7 @@ class PVX_API
 	private $templateName;
 	private $searchClause;
 	private $url;
+	private $saveAction;
 	
 	public $totalRows;
 	public $errorOccurred;
@@ -27,6 +28,7 @@ class PVX_API
 			
 	function __construct($clientID,$Username,$Password,$URL)
 	{
+		$this->saveAction=0;  // set to default action
 		$this->debugmode = (defined('DEBUGMODE') && DEBUGMODE == True);
 		$this->loggedIn = false;
 		$this->errorOccurred = false;
@@ -38,6 +40,14 @@ class PVX_API
 		}
 	}
 	
+	public function DeleteData($templateName, $csv_data)
+	{
+		$this->saveAction = 2;  // delete
+		$response = $this->SaveData($templateName, $csv_data);
+		$this->saveAction = 0;  // reset to default action
+		return $response;
+	}
+
 
 	public function SaveData($templateName, $csv_data)
 	{
@@ -57,7 +67,7 @@ class PVX_API
 		$this->errorOccurred = false;	
 			
 		// create the SOAP request body
-		$saveRequest = array('TemplateName' => $templateName, 'CsvData' => $csv_data, 'Action' => 0);  // Actions: 0 - default action; 1 - do not allocate; 2 - delete
+		$saveRequest = array('TemplateName' => $templateName, 'CsvData' => $csv_data, 'Action' => $this->saveAction);  // Actions: 0 - default action; 1 - do not allocate; 2 - delete
 		$saveRequestObj = array('saveRequest' => $saveRequest);
 		
 		if ($this->debugmode) {echo('<PRE>DEBUGMODE: GET DATA PARAMS: '.print_r($saveRequestObj, true)."</PRE>");}

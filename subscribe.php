@@ -138,6 +138,24 @@ if (isset($_REQUEST['save_data']))
 	}
 	
 }
+
+if (isset($_REQUEST['delete_data']))
+{
+
+
+	$myPVX = new PVX_API(SUBSCRIBE_CLIENT_ID, SUBSCRIBE_USER_NAME, SUBSCRIBE_PASSWORD,SUBSCRIBE_URL);
+	
+	if ($myPVX->LoggedIn())  
+	{ 
+		$response = $myPVX->DeleteData($_REQUEST['template_name'], $_REQUEST['csv_data']);
+	
+		echo "<PRE>SaveData Output - Response:".(($response)?$response:'FALSE')."</PRE>";
+		echo "<PRE>SaveData Output - SaveDataDetail:".print_r($myPVX->SaveDataDetail, true)."</PRE>";
+		echo "<PRE>SaveData Output - Partial Import?:".(($myPVX->partial_import) ? 'True' :'False')."</PRE>";
+	
+	}
+	
+}
 ?>
 
 <H1>PVX Set up Event Capture for Stock Changes</H1>
@@ -189,6 +207,15 @@ if (isset($_REQUEST['save_data']))
 "TIMTEST84112","11 Mar 2015 11:54:51","0555555","120 CHEMIN DES BURGER","","GRENOBLE","Isert","99999","France","marie baggy","120 CHEMIN DES BURGER","GRENOBLE","Isèrt","99999","France","FALSE","7.50","tim.rance@corsets-uk","tim tim","59.50","-13.00","0.00","11 Mar 2015 11:54:51","RM_AIRMAIL_EU_EU_1","paypal_express","TRUE"
 </textarea>
 		<br><input type=submit value="Import Data to PVX">
+	</form>
+	<H2>Delete Data From PVX - use with care! especially LIVE!</H2>
+	<form action="?delete_data" method="post">
+		Template Name to import into [PVX table]:<br>
+		<input type=text name="template_name" value="Sales orders" size="150"><br> 
+		CSV Data:<br>
+		<textarea name="csv_data" cols=150 rows=10>"SalesOrderNumber"
+"TIMTEST84112"</textarea>
+		<br><input type=submit value="Delete Data to PVX">
 	</form>
 </body>
 </html>
