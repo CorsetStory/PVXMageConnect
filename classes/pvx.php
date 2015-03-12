@@ -1,6 +1,4 @@
 <?php
-define("DEBUGMODE", true);
-
 
 class PVX_API
 {
@@ -11,7 +9,7 @@ class PVX_API
 	private $sessionID;
 	private $loggedIn;
 	private $client;
-	private $debugmode;
+	public $debugmode;
 	private $templateName;
 	private $searchClause;
 	private $url;
@@ -29,15 +27,11 @@ class PVX_API
 	function __construct($clientID,$Username,$Password,$URL)
 	{
 		$this->saveAction=0;  // set to default action
-		$this->debugmode = (defined('DEBUGMODE') && DEBUGMODE == True);
+		$this->debugmode = false;
 		$this->loggedIn = false;
 		$this->errorOccurred = false;
 		$this->url = $URL;
 		$this->logintoAPI ($clientID,$Username,$Password, $this->url);
-		If($this->debugmode) 
-		{ 
-			if($this->loggedIn) { print "<BR>DEBUGMODE: LOGGED IN: ".$this->sessionID."; clientID = ".$this->clientID;} else { print "<BR>DEBUGMODE: LOG IN FAILED :-(";}
-		}
 	}
 	
 	public function DeleteData($templateName, $csv_data)
@@ -286,7 +280,7 @@ class PVX_API
 			$params = array('clientId' => $clientID,
 							'username' => $username,
 							'password' => base64_encode($password));
-			if(defined('DEBUGMODE') && DEBUGMODE == True)
+			if($this->debugmode)
 			{ 
 				echo('<PRE>DEBUGMODE: '.print_r($params, true).'</PRE>');
 				$this->client = new SoapClient($url."?wsdl", array("trace" => 1, "exception" => 0));
@@ -298,11 +292,11 @@ class PVX_API
 	
 			$response = $this->client->Authenticate($params);
 	
-			if(defined('DEBUGMODE') && DEBUGMODE == True) {echo('<PRE>DEBUGMODE: AUTHENTICATION RESPONSE: '.print_r($response, true)."</PRE>");}
+			if($this->debugmode) {echo('<PRE>DEBUGMODE: AUTHENTICATION RESPONSE: '.print_r($response, true)."</PRE>");}
 	
 			if(!is_soap_fault($response) && $response->AuthenticateResult->ResponseId == 0)
 			{
-				if(defined('DEBUGMODE') && DEBUGMODE == True) {echo('DEBUGMODE: NO ERRORS DETECTED AFTER CALLING PVX "Authenticate" FUNCTION');}
+				if($this->debugmode) {echo('DEBUGMODE: NO ERRORS DETECTED AFTER CALLING PVX "Authenticate" FUNCTION');}
 				$result = explode(',',$response->AuthenticateResult->Detail);
 				$this->sessionID = $result[1];
 				$this->clientID = $result[0];
