@@ -79,7 +79,7 @@ class PVX_API
 		if ($response) {
 			// SOAP Call succeeded
 			$this->partial_import = ($response->SaveDataResult->TotalCount > 0) && ($response->SaveDataResult->ResponseId == -1);
-			$this->SaveDataDetail =explode(",",$response->SaveDataResult->Detail);
+			$this->SaveDataDetail = $response->SaveDataResult->Detail;
 			return (($response->SaveDataResult->TotalCount == 0) ? false : $response->SaveDataResult->TotalCount);
 		}
 		// SOAP Call failed - errorMessage and  errorOccurred should be set...
