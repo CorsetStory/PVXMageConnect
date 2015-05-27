@@ -2,7 +2,7 @@
 
 class PVX_API
 {
-	const ITEMS_PER_PAGE = 10;
+	const ITEMS_PER_PAGE = 200;
 	const PVX_NS = "http://www.peoplevox.net/";
 	
 	private $clientID;

@@ -32,7 +32,7 @@ else
 	define("SUBSCRIBE_CLIENT_ID", "corsets2661Qa");
 	define("SUBSCRIBE_USER_NAME", "ReadOnly");
 	define("SUBSCRIBE_PASSWORD", "r0enaldy14");
-	define("SUBSCRIBE_URL", "http://qa1.peoplevox.net/corsets2661Qa/resources/integrationservicev4.asmx");
+	define("SUBSCRIBE_URL", "http://peoplevox.net/corsetsQa2661/resources/integrationservicev4.asmx");
 }
 
 
